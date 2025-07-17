@@ -15,9 +15,9 @@ users_collection = db["users"]
 async def register_user(payload: UserCreate):
     # Check if user already exists
     if await users_collection.find_one({"email": payload.email}):
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Email already registered"
+        return api_response(
+            message="Email already registered",
+            status=status.HTTP_409_CONFLICT
         )
 
     # Create new user
@@ -39,11 +39,10 @@ async def register_user(payload: UserCreate):
 async def login_user(payload: LoginRequest):
     user = await users_collection.find_one({"email": payload.email})
     if not user or not verify_password(payload.password, user["password_hash"]):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid email or password"
+        return api_response(
+            message="Invalid email or password",
+            status=status.HTTP_401_UNAUTHORIZED
         )
-
     token = create_jwt_token(data={"sub": user["email"]})
 
     return api_response(
