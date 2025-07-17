@@ -8,6 +8,7 @@ class Settings(BaseSettings):
     GOOGLE_CLIENT_ID: str = Field(..., alias="GOOGLE_CLIENT_ID")
     GOOGLE_CLIENT_SECRET: str = Field(..., alias="GOOGLE_CLIENT_SECRET")
     SESSION_SECRET_KEY: str = Field(..., alias="SESSION_SECRET_KEY")
+    GEMINI_API_KEY: str = Field(..., alias="GEMINI_API_KEY")
 
     class Config:
         env_file = ".env"

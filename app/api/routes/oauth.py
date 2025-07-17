@@ -5,11 +5,12 @@ import os
 from dotenv import load_dotenv
 from app.db.mongodb import db
 from app.core.auth import create_jwt_token
-from app.utils.api_response import api_response
+from app.models.user import User
 
 load_dotenv()
 router = APIRouter()
 
+# Register Google OAuth provider
 oauth = OAuth()
 oauth.register(
     name='google',
@@ -26,15 +27,17 @@ async def login_via_google(request: Request):
 
 @router.get("/google/callback", name="google_auth_callback")
 async def google_auth_callback(request: Request):
+    # Exchange code for access token
     token = await oauth.google.authorize_access_token(request)
     user_info = await oauth.google.userinfo(token=token)
 
     email = user_info["email"]
     users_collection = db["users"]
 
+    # Check if user exists
     user = await users_collection.find_one({"email": email})
     if not user:
-        from app.models.user import User
+        # Create new user if not found
         new_user = User(
             email=email,
             password_hash="",  # No password for OAuth users
@@ -45,10 +48,9 @@ async def google_auth_callback(request: Request):
     else:
         user_id = str(user["_id"])
 
+    # Generate JWT token
     jwt_token = create_jwt_token({"sub": email})
 
-    return api_response(
-        message="Google login successful",
-        status=200,
-        data={"token": jwt_token, "user_id": user_id}
-    )
+    # Redirect to frontend with token and user_id in query params
+    redirect_url = f"http://localhost:8001/auth/callback?token={jwt_token}&user_id={user_id}"
+    return RedirectResponse(url=redirect_url)

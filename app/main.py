@@ -1,5 +1,6 @@
 from fastapi import FastAPI
-from starlette.middleware.sessions import SessionMiddleware  # ✅ Required for OAuth sessions
+from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware.sessions import SessionMiddleware
 import os
 from dotenv import load_dotenv
 
@@ -14,10 +15,19 @@ load_dotenv()
 # ✅ Initialize FastAPI app
 app = FastAPI(title=settings.APP_NAME)
 
+# ✅ Add CORS middleware before routers
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"], 
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 # ✅ Add SessionMiddleware for OAuth session support
 app.add_middleware(
     SessionMiddleware,
-    secret_key=os.getenv("SESSION_SECRET_KEY", "super-secret-key-change-this")  # use strong key in production
+    secret_key=os.getenv("SESSION_SECRET_KEY", "super-secret-key-change-this")
 )
 
 # ✅ Include routes

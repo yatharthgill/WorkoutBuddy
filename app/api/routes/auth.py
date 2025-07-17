@@ -1,5 +1,5 @@
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, status
 from app.schemas.auth import LoginRequest
 from app.schemas.user import UserCreate
 from app.db.mongodb import db
@@ -7,6 +7,7 @@ from app.models.user import User
 from app.core.security import hash_password, verify_password
 from app.core.auth import create_jwt_token
 from app.utils.api_response import api_response
+from app.utils.gemini import generate_gemini_response
 
 router = APIRouter()
 users_collection = db["users"]
