@@ -24,9 +24,7 @@ ALLOWED_HOSTS = [
     '.onrender.com',  # Allow all Render subdomains (backend & frontend)
 ]
 
-CSRF_TRUSTED_ORIGINS = [
-    "https://workoutbuddy-frontend-r4f7.onrender.com",
-]
+CSRF_TRUSTED_ORIGINS = os.getenv("FASTAPI_BASE_URL", "")
 
 # Application definition
 INSTALLED_APPS = [
