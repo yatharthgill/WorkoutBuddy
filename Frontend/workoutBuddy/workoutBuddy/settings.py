@@ -24,7 +24,10 @@ ALLOWED_HOSTS = [
     '.onrender.com',  # Allow all Render subdomains (backend & frontend)
 ]
 
-CSRF_TRUSTED_ORIGINS = os.getenv("CSRF_TRUSTED_ORIGINS", "").split(",")
+CSRF_TRUSTED_ORIGINS = [
+    "https://workoutbuddyfrontend-kn9e.onrender.com",
+    "https://workoutbuddy-9nqn.onrender.com"
+]
 
 # Application definition
 INSTALLED_APPS = [
