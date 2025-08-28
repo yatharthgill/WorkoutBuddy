@@ -17,18 +17,12 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = Field(60 * 2, alias="ACCESS_TOKEN_EXPIRE_MINUTES")
     FERNET_KEY: str = Field(..., alias="FERNET_KEY")
 
-    # Mailtrap email config (for development/testing)
-    MAILTRAP_HOST: str = Field("sandbox.smtp.mailtrap.io", json_schema_extra={"env": "MAILTRAP_HOST"})
-    MAILTRAP_PORT: int = Field(587, json_schema_extra={"env": "MAILTRAP_PORT"})
-    MAILTRAP_USERNAME: str = Field(..., json_schema_extra={"env": "MAILTRAP_USERNAME"})
-    MAILTRAP_PASSWORD: str = Field(..., json_schema_extra={"env": "MAILTRAP_PASSWORD"})
-    FROM_EMAIL: str = Field(..., json_schema_extra={"env": "FROM_EMAIL"})
-
     # Gmail / Production email config
     EMAIL_HOST: str = Field("smtp.gmail.com", json_schema_extra={"env": "EMAIL_HOST"})
     EMAIL_PORT: int = Field(587, json_schema_extra={"env": "EMAIL_PORT"})
     EMAIL_USER: str = Field(..., json_schema_extra={"env": "EMAIL_USER"})
     EMAIL_PASS: str = Field(..., json_schema_extra={"env": "EMAIL_PASS"})
+    FROM_EMAIL: str = Field(..., json_schema_extra={"env": "FROM_EMAIL"})
 
     GROQ_API_KEY: str = Field(..., json_schema_extra={"env": "GROQ_API_KEY"})
 
