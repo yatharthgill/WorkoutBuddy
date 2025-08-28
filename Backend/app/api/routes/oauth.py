@@ -8,6 +8,7 @@ from app.models.auth import User
 
 
 router = APIRouter()
+FRONTEND_BASEURL = settings.FRONTEND_BASEURL
 
 # Register Google OAuth provider
 oauth = OAuth()
@@ -25,6 +26,7 @@ async def login_via_google(request: Request):
     return await oauth.google.authorize_redirect(request, redirect_uri)
 
 @router.get("/google/callback", name="google_auth_callback")
+
 async def google_auth_callback(request: Request):
     token = await oauth.google.authorize_access_token(request)
     user_info = await oauth.google.userinfo(token=token)
@@ -49,5 +51,5 @@ async def google_auth_callback(request: Request):
     # ✅ FIXED: Create JWT using expected parameters
     jwt_token = create_jwt_token(user_id=user_id, email=email)
 
-    redirect_url = f"https://workoutbuddy-frontend-r4f7.onrender.com/login/callback?token={jwt_token}"
+    redirect_url = f"{FRONTEND_BASEURL}/login/callback?token={jwt_token}"
     return RedirectResponse(url=redirect_url)

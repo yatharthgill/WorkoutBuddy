@@ -1,6 +1,7 @@
 from pydantic_settings import BaseSettings  # type: ignore
 from pydantic import Field
 
+
 class Settings(BaseSettings):
     APP_NAME: str = Field("WorkoutBuddy", json_schema_extra={"env": "APP_NAME"}) 
     MONGO_URL: str = Field(..., json_schema_extra={"env": "MONGO_URL"})
@@ -16,17 +17,27 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = Field(60 * 2, alias="ACCESS_TOKEN_EXPIRE_MINUTES")
     FERNET_KEY: str = Field(..., alias="FERNET_KEY")
 
-    # Mailtrap email config
+    # Mailtrap email config (for development/testing)
     MAILTRAP_HOST: str = Field("sandbox.smtp.mailtrap.io", json_schema_extra={"env": "MAILTRAP_HOST"})
     MAILTRAP_PORT: int = Field(587, json_schema_extra={"env": "MAILTRAP_PORT"})
     MAILTRAP_USERNAME: str = Field(..., json_schema_extra={"env": "MAILTRAP_USERNAME"})
     MAILTRAP_PASSWORD: str = Field(..., json_schema_extra={"env": "MAILTRAP_PASSWORD"})
     FROM_EMAIL: str = Field(..., json_schema_extra={"env": "FROM_EMAIL"})
+
+    # Gmail / Production email config
+    EMAIL_HOST: str = Field("smtp.gmail.com", json_schema_extra={"env": "EMAIL_HOST"})
+    EMAIL_PORT: int = Field(587, json_schema_extra={"env": "EMAIL_PORT"})
+    EMAIL_USER: str = Field(..., json_schema_extra={"env": "EMAIL_USER"})
+    EMAIL_PASS: str = Field(..., json_schema_extra={"env": "EMAIL_PASS"})
+
     GROQ_API_KEY: str = Field(..., json_schema_extra={"env": "GROQ_API_KEY"})
+
+    FRONTEND_BASEURL : str = Field(..., json_schema_extra={"env": "FRONTEND_BASEURL"},)
 
     model_config = {
         "env_file": ".env",
         "env_file_encoding": "utf-8"
     }
+
 
 settings = Settings()

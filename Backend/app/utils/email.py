@@ -60,9 +60,9 @@ def send_reset_email(to_email: str, reset_link: str):
 
     msg.attach(MIMEText(html_content, "html"))
 
-    with smtplib.SMTP(settings.MAILTRAP_HOST, settings.MAILTRAP_PORT) as server:
+    with smtplib.SMTP(settings.EMAIL_HOST, settings.EMAIL_PORT) as server:
         server.starttls()
-        server.login(settings.MAILTRAP_USERNAME, settings.MAILTRAP_PASSWORD)
+        server.login(settings.EMAIL_USER, settings.EMAIL_PASS)
         server.sendmail(settings.FROM_EMAIL, to_email, msg.as_string())
 
 def send_verification_email(to_email: str, otp: str):
@@ -122,7 +122,7 @@ def send_verification_email(to_email: str, otp: str):
 
     msg.attach(MIMEText(html_content, "html"))
 
-    with smtplib.SMTP(settings.MAILTRAP_HOST, settings.MAILTRAP_PORT) as server:
+    with smtplib.SMTP(settings.EMAIL_HOST, settings.EMAIL_PORT) as server:
         server.starttls()
-        server.login(settings.MAILTRAP_USERNAME, settings.MAILTRAP_PASSWORD)
+        server.login(settings.EMAIL_USER, settings.EMAIL_PASS)
         server.sendmail(settings.FROM_EMAIL, to_email, msg.as_string())
