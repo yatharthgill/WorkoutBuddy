@@ -24,7 +24,7 @@ ALLOWED_HOSTS = [
     '.onrender.com',  # Allow all Render subdomains (backend & frontend)
 ]
 
-CSRF_TRUSTED_ORIGINS = os.getenv("FASTAPI_BASE_URL", "")
+CSRF_TRUSTED_ORIGINS = os.getenv("CSRF_TRUSTED_ORIGINS", "").split(",")
 
 # Application definition
 INSTALLED_APPS = [
