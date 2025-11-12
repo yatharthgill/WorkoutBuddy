@@ -1,7 +1,8 @@
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, Request, Depends
 from pydantic import BaseModel
 from app.utils.groq import get_groq_chat_response
 import re
+from app.core.auth import get_current_user_id
 
 router = APIRouter()
 
@@ -20,14 +21,13 @@ def format_response(text: str) -> str:
     return text
 
 @router.post("/chat")
-async def chat(message: ChatRequest, request: Request):
+async def chat(message: ChatRequest, request: Request, user_id: str = Depends(get_current_user_id)):
     user_message = message.message.strip()
 
     if not user_message:
         return {"response": "⚠️ Please enter a message."}
 
-    # Strict check: only allow fitness-related messages
-
+    # User is authenticated (user_id available). Forward message to Groq model.
     response = get_groq_chat_response(user_message)
     formatted_response = format_response(response)
     return {"response": formatted_response}

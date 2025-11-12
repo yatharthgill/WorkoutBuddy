@@ -11,6 +11,7 @@ from datetime import datetime, timezone , time , timedelta ,date
 from app.models.user_profile import UserProfileUpdate
 
 from app.utils.groq import get_groq_response
+from pymongo import ReturnDocument
 
 
 router = APIRouter(dependencies=[Depends(get_current_user_id)])
@@ -176,6 +177,7 @@ async def log_workout_day(
     payload: WorkoutDayLogRequest,
     user_id: str = Depends(get_current_user_id)
 ):
+    # 🧩 Validate IDs
     if not ObjectId.is_valid(user_id) or not ObjectId.is_valid(payload.plan_id):
         return api_response(message="Invalid user ID or plan ID", status=400)
 
@@ -184,74 +186,81 @@ async def log_workout_day(
         "_id": ObjectId(payload.plan_id),
         "user_id": user_id
     })
-
     if not plan_doc:
         return api_response(message="Workout plan not found", status=404)
 
-    # 🗓 Get day name from date (e.g., "Sunday")
+    # 🗓 Determine the day of the week
     day_name = payload.date.strftime("%A")
 
-    # 🔍 Find matching day from the plan
+    # 🔍 Find day plan
     day_plan = next(
         (d for d in plan_doc.get("plan", []) if d.get("day", "").lower() == day_name.lower()),
         None
     )
-
     if not day_plan:
         return api_response(message=f"No workout found for day: {day_name}", status=404)
-    
+
     if payload.date > date.today():
         return api_response(message="Cannot log workout for a future date.", status=400)
 
-    # 🚫 Prevent logging rest day
+    # 🚫 Handle rest days
     if not day_plan.get("exercises") or day_plan.get("focus", "").lower() == "rest":
         return api_response(message=f"{day_name} is a rest day. No workout to log.", status=400)
 
-
+    # 🕒 Prepare timestamps
     log_timestamp = payload.created_at or datetime.now(timezone.utc)
-
-    # 📆 Check for duplicates using logged_at range
     start_dt = datetime.combine(payload.date, time.min).replace(tzinfo=timezone.utc)
     end_dt = start_dt + timedelta(days=1)
 
-    existing_log = await workout_log_collection.find_one({
-        "user_id": ObjectId(user_id),
-        "plan_id": ObjectId(payload.plan_id),
-        "logged_at": {"$gte": start_dt, "$lt": end_dt}
-    })
-
-    if existing_log:
-        return api_response(message=f"Workout for {payload.date} already logged.", status=409)
-
-    # ✅ Map exercises
-    completion_flags = {e.name.lower(): e.completed for e in (payload.exercises or [])}
-    mapped_exercises = []
-    for exercise in day_plan.get("exercises", []):
-        mapped_exercises.append({
-            "name": exercise["name"],
-            "sets": exercise["sets"],
-            "reps": exercise["reps"],
-            "equipment": exercise.get("equipment"),
-            "duration_per_set": exercise.get("duration_per_set"),
-            "completed": completion_flags.get(exercise["name"].lower(), False)
-        })
-
-    # 🧾 Final log document
-    log_doc = {
-        "user_id": ObjectId(user_id),
-        "plan_id": ObjectId(payload.plan_id),
-        "date": payload.date.isoformat(),
-        "status": payload.status,
-        "logged_at": log_timestamp,
-        "exercises": mapped_exercises
-    }
-
+    # ✅ Use atomic upsert to prevent duplicates
     try:
-        result = await workout_log_collection.insert_one(log_doc)
-        return api_response(
-            message=f"Workout for {payload.date} logged with {len(mapped_exercises)} exercises.",
-            status=201,
-            data={"log_id": str(result.inserted_id)}
+        log_doc = {
+            "user_id": ObjectId(user_id),
+            "plan_id": ObjectId(payload.plan_id),
+            "date": payload.date.isoformat(),
+            "status": payload.status,
+            "logged_at": log_timestamp,
+            "exercises": [
+                {
+                    "name": ex["name"],
+                    "sets": ex["sets"],
+                    "reps": ex["reps"],
+                    "equipment": ex.get("equipment"),
+                    "duration_per_set": ex.get("duration_per_set"),
+                    "completed": next(
+                        (e.completed for e in payload.exercises if e.name.lower() == ex["name"].lower()),
+                        False
+                    )
+                }
+                for ex in day_plan.get("exercises", [])
+            ]
+        }
+
+        # 🔒 Use find_one_and_update with upsert=False for atomic check
+        # Use the ISO date string as the canonical dedupe key. Also accept either
+        # ObjectId or string form for user_id to be robust against existing docs.
+        filter_query = {
+            "$or": [{"user_id": ObjectId(user_id)}, {"user_id": user_id}],
+            "plan_id": ObjectId(payload.plan_id),
+            "date": payload.date.isoformat()
+        }
+
+        # find_one_and_update will return the previous document when using
+        # ReturnDocument.BEFORE. If it returns None, the document was inserted.
+        existing_log = await workout_log_collection.find_one_and_update(
+            filter_query,
+            {"$setOnInsert": log_doc},
+            upsert=True,
+            return_document=ReturnDocument.BEFORE
         )
+
+        if existing_log is not None:
+            return api_response(message=f"Workout for {payload.date} already logged.", status=409)
+
+        return api_response(
+            message=f"Workout for {payload.date} logged successfully.",
+            status=201
+        )
+
     except Exception as e:
         return api_response(message=f"Error logging workout: {str(e)}", status=500)

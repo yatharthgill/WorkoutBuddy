@@ -192,7 +192,7 @@ def google_login_callback(request):
     if token:
         request.session['token'] = token
         messages.success(request, "Google login successful!")
-        return redirect('profile')
+        return redirect('/')
     else:
         messages.error(request, "Google login failed: Missing credentials.")
         return redirect('login')

@@ -42,4 +42,4 @@ class WorkoutProgressAPIResponse(BaseModel):
     message: str
     status: int
     success: bool
-    data: WorkoutProgressResponse
+    data: Optional[WorkoutProgressResponse] = None

@@ -41,6 +41,46 @@
       color: #bbb;
     }
 
+    .date-form {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 30px;
+      background-color: #121212;
+      padding: 15px 20px;
+      border-radius: 12px;
+      box-shadow: 0 0 10px rgba(38, 224, 5, 0.2);
+    }
+
+    .date-form label {
+      margin-right: 10px;
+      color: #aaa;
+      font-size: 14px;
+    }
+
+    .date-form input[type="date"] {
+      background-color: #0f0f0f;
+      color: #fff;
+      border: 1px solid #26e005;
+      padding: 5px 10px;
+      border-radius: 5px;
+      font-size: 14px;
+    }
+
+    .date-form button {
+      background-color: #26e005;
+      color: #0e0e0e;
+      border: none;
+      padding: 6px 14px;
+      border-radius: 6px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    .date-form button:hover {
+      background-color: #1bc400;
+    }
+
     .progress-cards {
       display: flex;
       justify-content: space-between;
@@ -91,6 +131,19 @@
       </div>
     </div>
 
+    <!--  Date Selection Form -->
+    <form class="date-form" method="get">
+      <div>
+        <label for="start_date">Start Date:</label>
+        <input type="date" id="start_date" name="start_date" value="{{ start_date }}">
+      </div>
+      <div>
+        <label for="end_date">End Date:</label>
+        <input type="date" id="end_date" name="end_date" value="{{ end_date }}">
+      </div>
+      <button type="submit">Filter</button>
+    </form>
+
     <div class="progress-cards">
       <div class="progress-card">
         <canvas id="consistencyChart" width="120" height="120"></canvas>
@@ -108,153 +161,152 @@
     </div>
   </div>
 
-<script>
-  // Plugin to show percentage inside doughnut chart
-  const centerTextPlugin = {
-    id: 'centerText',
-    beforeDraw: function(chart) {
-      const width = chart.width;
-      const height = chart.height;
-      const ctx = chart.ctx;
-      ctx.restore();
-      const percent = chart.config.data.datasets[0].data[0];
-      const text = `${percent}%`;
-      ctx.font = 'bold 28px Segoe UI';
-      ctx.fillStyle = '#26e005';
-      ctx.textBaseline = 'middle';
-      const textX = Math.round((width - ctx.measureText(text).width) / 2);
-      const textY = height / 2;
-      ctx.fillText(text, textX, textY);
-      ctx.save();
-    }
-  };
+  <script>
+    const centerTextPlugin = {
+      id: 'centerText',
+      beforeDraw: function(chart) {
+        const width = chart.width;
+        const height = chart.height;
+        const ctx = chart.ctx;
+        ctx.restore();
+        const percent = chart.config.data.datasets[0].data[0];
+        const text = `${percent}%`;
+        ctx.font = 'bold 28px Segoe UI';
+        ctx.fillStyle = '#26e005';
+        ctx.textBaseline = 'middle';
+        const textX = Math.round((width - ctx.measureText(text).width) / 2);
+        const textY = height / 2;
+        ctx.fillText(text, textX, textY);
+        ctx.save();
+      }
+    };
 
-  // Draw doughnut chart with label and percentage
-  const drawRadialChart = (canvasId, percentage, label) => {
-    const ctx = document.getElementById(canvasId).getContext('2d');
-    new Chart(ctx, {
-      type: 'doughnut',
+    const drawRadialChart = (canvasId, percentage, label) => {
+      const ctx = document.getElementById(canvasId).getContext('2d');
+      new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: [label, 'Remaining'],
+          datasets: [{
+            data: [percentage, 100 - percentage],
+            backgroundColor: ['#26e005', '#333'],
+            hoverOffset: 5,
+            borderWidth: 0
+          }]
+        },
+        options: {
+          cutout: '70%',
+          responsive: true,
+          plugins: {
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  return `${context.label}: ${context.parsed}%`;
+                }
+              }
+            },
+            legend: {
+              display: false
+            },
+            title: {
+              display: true,
+              text: `${label} Score`,
+              color: '#ffffff',
+              font: {
+                size: 14
+              },
+              padding: {
+                top: 10,
+                bottom: 5
+              }
+            }
+          }
+        },
+        plugins: [centerTextPlugin]
+      });
+    };
+
+    drawRadialChart('consistencyChart', {{ consistency }}, 'Consistency');
+    drawRadialChart('adherenceChart', {{ adherence }}, 'Adherence');
+
+    const dailyData = {{ daily_data|safe }};
+    console.log("Daily Data:", dailyData);
+    const calorieDates = dailyData.map(entry => entry.date);
+    const calorieTotals = dailyData.map(entry => entry.total);
+
+    const lineCtx = document.getElementById('calorieLineChart').getContext('2d');
+    new Chart(lineCtx, {
+      type: 'line',
       data: {
-        labels: [label, 'Remaining'],
+        labels: calorieDates,
         datasets: [{
-          data: [percentage, 100 - percentage],
-          backgroundColor: ['#26e005', '#333'],
-          hoverOffset: 5,
-          borderWidth: 0
+          label: 'Calories Consumed',
+          data: calorieTotals,
+          borderColor: '#26e005',
+          backgroundColor: 'rgba(0, 255, 136, 0.15)',
+          pointBackgroundColor: '#26e005',
+          fill: true,
+          tension: 0.4
         }]
       },
       options: {
-        cutout: '70%',
         responsive: true,
+        interaction: {
+          mode: 'nearest',
+          axis: 'x',
+          intersect: false
+        },
+        scales: {
+          x: {
+            title: {
+              display: true,
+              text: 'Dates',
+              color: '#22e005',
+              font: { size: 12 }
+            },
+            ticks: { color: '#aaa' },
+            grid: { color: '#222' }
+          },
+          y: {
+            beginAtZero: true,
+            title: {
+              display: true,
+              text: 'Calories Intake',
+              color: '#22e005',
+              font: { size: 12 }
+            },
+            ticks: { color: '#aaa' },
+            grid: { color: '#222' }
+          }
+        },
         plugins: {
           tooltip: {
             callbacks: {
               label: function(context) {
-                return `${context.label}: ${context.parsed}%`;
+                return `Calories: ${context.parsed.y}`;
               }
             }
           },
           legend: {
-            display: false
+            labels: {
+              color: '#00ff88'
+            }
           },
           title: {
             display: true,
-            text: `${label} Score`,
-            color: '#ffffff',
+            text: 'Calories Consumed Each Day',
+            color: '#26e005',
             font: {
-              size: 14
+              size: 16
             },
             padding: {
-              top: 10,
-              bottom: 5
+              bottom: 15
             }
-          }
-        }
-      },
-      plugins: [centerTextPlugin]
-    });
-  };
-
-  drawRadialChart('consistencyChart', {{ consistency }}, 'Consistency');
-  drawRadialChart('adherenceChart', {{ adherence }}, 'Adherence');
-
-  const dailyData = {{ daily_data|safe }};
-  const calorieDates = dailyData.map(entry => entry.date);
-  const calorieTotals = dailyData.map(entry => entry.total);
-
-  const lineCtx = document.getElementById('calorieLineChart').getContext('2d');
-  new Chart(lineCtx, {
-    type: 'line',
-    data: {
-      labels: calorieDates,
-      datasets: [{
-        label: 'Calories Consumed',
-        data: calorieTotals,
-        borderColor: '#26e005',
-        backgroundColor: 'rgba(0, 255, 136, 0.15)',
-        pointBackgroundColor: '#26e005',
-        fill: true,
-        tension: 0.4
-      }]
-    },
-    options: {
-      responsive: true,
-      interaction: {
-        mode: 'nearest',
-        axis: 'x',
-        intersect: false
-      },
-      scales: {
-        x: {
-          title: {
-            display: true,
-            text: 'Dates',
-            color: '#22e005',
-            font: { size: 12 }
-          },
-          ticks: { color: '#aaa' },
-          grid: { color: '#222' }
-        },
-        y: {
-          beginAtZero: true,
-          title: {
-            display: true,
-            text: 'Calories Intake',
-            color: '#22e005',
-            font: { size: 12 }
-          },
-          ticks: { color: '#aaa' },
-          grid: { color: '#222' }
-        }
-      },
-      plugins: {
-        tooltip: {
-          callbacks: {
-            label: function(context) {
-              return `Calories: ${context.parsed.y}`;
-            }
-          }
-        },
-        legend: {
-          labels: {
-            color: '#00ff88'
-          }
-        },
-        title: {
-          display: true,
-          text: 'Calories Consumed Each Day',
-          color: '#26e005',
-          font: {
-            size: 16
-          },
-          padding: {
-            bottom: 15
           }
         }
       }
-    }
-  });
-</script>
+    });
+  </script>
 
 </body>
 </html>

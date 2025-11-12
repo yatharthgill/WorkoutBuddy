@@ -22,7 +22,7 @@ urlpatterns = [
    path('admin/', admin.site.urls),
    path('', views.HomePage),
    path('about/', views.AboutPage),
-   path('contact/', views.ContactPage, name='contact'),
+   path('contact/', views.contactPage , name='contact'), 
    path('', include('user.urls')),
    path('diet/', include(('dietPlan.urls', 'dietPlan'), namespace='dietPlan')),
    path('workout/', include('workout.urls')),
