@@ -1,18 +1,11 @@
+{% extends "index.html" %}
 {% load static %}
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Workout Progress Report</title>
+
+{% block title %}Workout Progress Report{% endblock %}
+  {% block extra_head %}
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
   <style>
-    body {
-      background: #0f0f0f;
-      color: #26e005;
-      font-family: 'Segoe UI', sans-serif;
-      padding: 2rem;
-    }
 
     .container {
       max-width: 1000px;
@@ -107,9 +100,9 @@
       font-size: 1.2rem;
     }
   </style>
-</head>
-<body>
-
+{% endblock %}
+{% block content %}
+<div class="w-full flex items-center justify-center bg-[var(--dark-bg)] text-[var(--light-text)] p-8">
   {% if error %}
     <div class="error">{{ error }}</div>
   {% else %}
@@ -146,7 +139,7 @@
     </div>
   </div>
     {% endif %}
-
+</div>
   <script>
   const muscleLabels = {{ muscle_labels|safe }};
   const muscleValues = {{ muscle_values|safe }};
@@ -204,3 +197,4 @@
 }
   });
 </script>
+{% endblock %}

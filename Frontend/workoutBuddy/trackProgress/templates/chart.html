@@ -1,19 +1,11 @@
+{% extends "index.html" %}
 {% load static %}
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Diet Progress</title>
+
+{% block title %}Diet Progress{% endblock %}
+  {% block extra_head %}
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
-    body {
-      background-color: #0e0e0e;
-      color: #ffffff;
-      font-family: 'Segoe UI', sans-serif;
-      padding: 40px;
-      display: flex;
-      justify-content: center;
-    }
+
 
     .progress-container {
       background: #1a1a1a;
@@ -121,9 +113,10 @@
       max-width: 100%;
     }
   </style>
-</head>
-<body>
-  <div class="progress-container">
+{% endblock %}
+{% block content %}
+<div class="w-full flex items-center justify-center bg-[var(--dark-bg)] text-[var(--light-text)] p-8">
+  <div class="progress-container ">
     <div class="header-row">
       <h2>Diet Progress</h2>
       <div class="details">
@@ -160,7 +153,7 @@
       <canvas id="calorieLineChart"></canvas>
     </div>
   </div>
-
+</div>
   <script>
     const centerTextPlugin = {
       id: 'centerText',
@@ -307,6 +300,4 @@
       }
     });
   </script>
-
-</body>
-</html>
+{% endblock %}

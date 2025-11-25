@@ -103,7 +103,6 @@ async def resend_otp(data: ResendOTP):  # expects email in payload
     recent_otp = await otp_collection.find_one({"email": data.email})
     if recent_otp:
         created_at = recent_otp["created_at"]
-        print(created_at)
     if created_at.tzinfo is None:
         created_at = created_at.replace(tzinfo=timezone.utc)
 

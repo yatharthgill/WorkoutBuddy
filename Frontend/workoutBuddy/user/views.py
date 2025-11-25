@@ -142,7 +142,7 @@ def password_flow_view(request):
             
         
             response = requests.post(
-                f'{FASTAPI_BASE_URL}/reset-password',
+                f'{FASTAPI_BASE_URL}/api/reset-password',
                 data={"token": token, "new_password": password}
             )
      
@@ -163,7 +163,7 @@ def password_flow_view(request):
                 return render(request, "forgot-password.html", {"error": error})
 
             response = requests.post(
-                f'{FASTAPI_BASE_URL}/forgot-password',
+                f'{FASTAPI_BASE_URL}/api/forgot-password',
                 json={"email": email}
             )
 

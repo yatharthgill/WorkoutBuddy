@@ -12,7 +12,6 @@ FASTAPI_BASE_URL = settings.FASTAPI_BASE_URL
 
 def profile_json_view(request):
     token = request.session.get('token')
-    print(token)
     if not token:
         return JsonResponse({"error": "Unauthorized"}, status=401)
     
@@ -21,7 +20,6 @@ def profile_json_view(request):
     }
     try:
         response = requests.get(f"{FASTAPI_BASE_URL}/api/user/profile", headers=headers)
-        print(response)
         if response.status_code == 200:
             json_data = response.json()
             return JsonResponse(json_data.get("data", {}))
@@ -55,10 +53,10 @@ def create_workout_plan(request):
                     "injuries_or_limitations": injuries,
                 }
 
-                print("Sending payload to FastAPI:", payload)
+                
 
                 token = request.session.get("token")
-                print(token)
+                
                 if not token:
                     messages.error(request, "You must be logged in to generate your plan.")
                     return redirect("login")
@@ -90,12 +88,10 @@ def create_workout_plan(request):
                     return render(request, "create-workout.html", {"form": form})
 
             except Exception as e:
-                print("Exception occurred:", e)
                 messages.error(request, f"An internal error occurred: {e}")
                 return render(request, "create-workout.html", {"form": form})
 
         else:
-            print("Form validation errors:", form.errors)
             messages.error(request, "Please fix the errors below.")
             return render(request, "create-workout.html", {"form": form})
 
@@ -138,6 +134,5 @@ def view_workout_plan(request):
             return redirect("create_workout_plan")
 
     except Exception as e:
-        print("Error parsing FastAPI response:", e)
         messages.error(request, "Error parsing workout plans.")
         return redirect("create_workout_plan")

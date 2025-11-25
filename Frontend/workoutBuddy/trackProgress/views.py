@@ -174,7 +174,6 @@ def workout_progress_view(request):
         return render(request, "workout_Chart.html", context)
 
     except Exception as e:
-        print("ERROR:", str(e))
         messages.error(request, f"Failed to fetch workout progress: {str(e)}")
         return render(request, "workout_Chart.html", {"error": str(e)})
 
@@ -191,7 +190,6 @@ def diet_progress_date_range_view(request):
         start_date = request.POST.get("start_date")
         end_date = request.POST.get("end_date")
 
-        print("Sending date range:", start_date, end_date)
 
         headers = {
             "Authorization": f"Bearer {token}"
@@ -209,8 +207,6 @@ def diet_progress_date_range_view(request):
                 timeout=10
             )
             res_json = response.json()
-            # print("API Response:", res_json)
-            # print("Status Code:", response.status_code)
 
             if response.status_code != 200 or "data" not in res_json or "summary" not in res_json["data"]:
                 messages.error(request, "Can't generate the data on these dates.")
@@ -268,7 +264,7 @@ def workout_progress_date_range_view(request):
         start_date = request.POST.get("start_date")
         end_date = request.POST.get("end_date")
 
-        print("Sending date range for workout:", start_date, end_date)
+        
 
         headers = {
             "Authorization": f"Bearer {token}"

@@ -19,20 +19,12 @@ async def log_meal(
         datetime.fromisoformat(data.date)
     except ValueError:
         return api_response(message="Invalid date format.", status=400)
-    print("=== Incoming Meal Log ===")
-    print("Date:", data.date)
-    print("Breakfast:", data.breakfast)
-    print("Lunch:", data.lunch)
-    print("Dinner:", data.dinner)
-
-# Optional: inspect as dict
-    print("Breakfast (dict):", [item.dict() for item in data.breakfast])
 
 
     # Convert Pydantic MealItem objects to dicts
-    breakfast_items = [item.dict() for item in data.breakfast]
-    lunch_items = [item.dict() for item in data.lunch]
-    dinner_items = [item.dict() for item in data.dinner]
+    breakfast_items = [item.model_dump() for item in data.breakfast]
+    lunch_items = [item.model_dump() for item in data.lunch]
+    dinner_items = [item.model_dump() for item in data.dinner]
 
     # Upsert the meal log
     await db["meal_logs"].update_one(

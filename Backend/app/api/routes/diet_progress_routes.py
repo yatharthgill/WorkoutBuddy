@@ -17,7 +17,7 @@ async def generate_ai_progress(
     start_date: str = Query(..., description="YYYY-MM-DD"),
     end_date: str = Query(..., description="YYYY-MM-DD")
 ):
-    print(f"Generating AI diet progress for user {user_id} from {start_date} to {end_date}")
+    
 
     # Validate dates
     try:

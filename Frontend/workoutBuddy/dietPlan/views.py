@@ -2,8 +2,12 @@ from django.shortcuts import render, redirect
 import requests
 from django.http import JsonResponse
 from django.conf import settings
+import logging
 
 FASTAPI_BASE_URL = settings.FASTAPI_BASE_URL
+
+# Use module logger; Django logging config controls output in production
+logger = logging.getLogger(__name__)
 
 
 # ===================== DIET PREFERENCE =====================
@@ -12,21 +16,20 @@ def diet_preference_view(request):
     allergies_list = ['Nuts', 'Gluten', 'Dairy', 'Soy', 'Eggs', 'Shellfish', 'None']
 
     token = request.session.get('token')
-    print(token)
     if not token:
         return redirect('login')
 
 
     try:
-            headers = {'Authorization': f'Bearer {token}'}
-            resp = requests.get(f'{FASTAPI_BASE_URL}/api/diet/diet-plan/', headers=headers)
-            if resp.status_code == 200:
-                user_data = resp.json().get('data', {})
-                user_id = user_data.get('user_id')
-                if user_id:
-                    request.session['user_id'] = user_id
-    except Exception as e:
-            print(f"[ERROR] Failed to fetch user_id: {e}")
+        headers = {'Authorization': f'Bearer {token}'}
+        resp = requests.get(f'{FASTAPI_BASE_URL}/api/diet/diet-plan/', headers=headers, timeout=5)
+        if resp.status_code == 200:
+            user_data = resp.json().get('data', {})
+            user_id = user_data.get('user_id')
+            if user_id:
+                request.session['user_id'] = user_id
+    except Exception:
+        logger.exception("Failed to fetch user_id from FastAPI")
 
 
 
@@ -65,20 +68,20 @@ def diet_preference_view(request):
             response = requests.post(
                 f"{FASTAPI_BASE_URL}/api/diet/generate-diet-plan/",
                 json=payload,
-                headers=headers
+                headers=headers,
+                timeout=10
             )
 
-            print("[DEBUG] FastAPI status:", response.status_code)
-            print("[DEBUG] FastAPI raw response:", response.text)
+            logger.debug("FastAPI generate-diet-plan status=%s", response.status_code)
+            logger.debug("FastAPI generate-diet-plan response=%s", response.text)
 
             if response.status_code in [200, 201]:
-                # Redirect to diet_result page without plan_id
                 return redirect('dietPlan:diet_result')
             else:
-                print("[DEBUG] FastAPI returned error:", response.text)
+                logger.error("FastAPI returned error while generating diet plan: %s", response.text)
 
-        except Exception as e:
-            print(f"[ERROR] Form processing failed: {e}")
+        except Exception:
+            logger.exception("Form processing failed in diet_preference_view")
 
     return render(request, 'diet-form.html', {
         'allergies_list': allergies_list
@@ -95,24 +98,23 @@ def diet_result_view(request):
     try:
         headers = {'Authorization': f'Bearer {token}'}
         response = requests.get(f"{FASTAPI_BASE_URL}/api/diet/diet-plan/", headers=headers)
-
-        print(f"[DEBUG] Response status code: {response.status_code}")
+        logger.debug("FastAPI diet-plan status=%s", response.status_code)
 
         # Redirect if diet plan is not found or API call fails
         if response.status_code == 404:
-            print("[DEBUG] Diet plan not found. Redirecting to diet preference.")
+            logger.info("Diet plan not found for user; redirecting to preference form")
             return redirect('dietPlan:dietPreference')
 
         if response.status_code != 200:
-            print("[DEBUG] Unexpected error:", response.text)
+            logger.error("Unexpected error fetching diet plan: %s", response.text)
             return redirect('dietPlan:dietPreference')
 
         data = response.json().get("data", {})
         plan = data.get("ai_generated_plan", {})
-        print(f"[DEBUG] Diet plan data: {plan}")
+        logger.debug("Diet plan data retrieved: exists=%s", bool(plan))
 
-    except Exception as e:
-        print(f"[ERROR] Exception occurred while fetching diet plan: {e}")
+    except Exception:
+        logger.exception("Exception occurred while fetching diet plan")
         return redirect('dietPlan:dietPreference')
 
     return render(request, 'diet-result.html', {
@@ -139,12 +141,14 @@ def check_diet_plan_view(request):
 
         if response.status_code == 200:
             data = response.json()
-            print(data)
+            logger.debug("check_diet_plan_view response data: exists=%s", bool(data.get("ai_generated_plan")))
             exists = bool(data.get("ai_generated_plan"))
             return JsonResponse({"exists": exists})
         else:
+            logger.warning("check_diet_plan_view unexpected status: %s", response.status_code)
             return JsonResponse({"exists": False})
-    except:
+    except Exception:
+        logger.exception("Error checking diet plan existence")
         return JsonResponse({"exists": False}, status=500)
 
 
@@ -190,8 +194,8 @@ def meal_log_view(request):
             headers = {'Authorization': f'Bearer {token}'}
             response = requests.post(f"{FASTAPI_BASE_URL}/api/progress/meal-log/", json=meal_data, headers=headers)
 
-            print("[DEBUG] Meal log POST status:", response.status_code)
-            print("[DEBUG] Meal log response:", response.text)
+            logger.debug("Meal log POST status=%s", response.status_code)
+            logger.debug("Meal log response=%s", response.text)
 
             if response.status_code in [200, 201]:
                 return render(request, 'meal-log.html', {
@@ -199,13 +203,14 @@ def meal_log_view(request):
                     'message': 'Meal log submitted successfully!'
                 })
             else:
+                logger.error("Failed to log meal: status=%s response=%s", response.status_code, response.text)
                 return render(request, 'meal-log.html', {
                     'meal_types': meal_types,
                     'message': 'Failed to log meal.'
                 })
 
-        except Exception as e:
-            print(f"[ERROR] Meal log submission failed: {e}")
+        except Exception:
+            logger.exception("Meal log submission failed")
             return render(request, 'meal-log.html', {
                 'meal_types': meal_types,
                 'message': 'Error submitting meal log.'
