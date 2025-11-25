@@ -29,7 +29,7 @@
 
      <!-- Progress Tracking -->
 <div class="bg-gray-900 p-6 rounded-lg shadow hover:scale-105 transition-transform duration-300 text-center flex flex-col justify-between h-full">
-  <img src="https://cdn-icons-png.flaticon.com/512/4151/4151740.png" alt="Tracking" class="w-16 h-16 rounded-full mx-auto mb-4 object-cover shadow-lg border-2 border-gray-300">
+  <img src="{% static 'images/progress.jpg' %}" alt="Tracking" class="w-16 h-16 rounded-full mx-auto mb-4 object-cover shadow-lg border-2 border-gray-300">
   <h3 class="text-xl font-semibold mb-2">Track Your Progress</h3>
   <p class="mb-4">Log workouts, monitor calories, measure BMI, and celebrate milestones in real-time.</p>
 
@@ -45,8 +45,8 @@
 </button>
 
     <!-- Dropdown menu -->
-    <div id="dropdownHover" class="z-10 hidden bg-white divide-y divide-gray-100 rounded-lg shadow-sm w-44 absolute left-1/2 transform -translate-x-1/2 mt-2 dark:bg-gray-700">
-      <ul class="py-2 text-sm text-gray-700 dark:text-gray-200" aria-labelledby="dropdownHoverButton">
+    <div id="dropdownHover" class="z-10 hidden bg-black divide-y divide-gray-100 rounded-lg shadow-sm w-44 absolute left-1/2 transform -translate-x-1/2 mt-2 dark:bg-gray-700">
+      <ul class="py-2 text-sm text-gray-50 dark:text-gray-200" aria-labelledby="dropdownHoverButton">
         <li>
           <a href="{% url 'dates'%}" class="block px-4 py-2 hover:bg-gray-900 dark:hover:bg-gray-900 dark:hover:text-white">Meal Progress</a>
         </li>
