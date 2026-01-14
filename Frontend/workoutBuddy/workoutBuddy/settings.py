@@ -26,7 +26,10 @@ ALLOWED_HOSTS = [
 
 CSRF_TRUSTED_ORIGINS = [
     "https://workoutbuddyfrontend-49zr.onrender.com",
-    "https://workoutbuddy-zbz4.onrender.com"
+    "https://workoutbuddy-zbz4.onrender.com",
+     "https://workoutbuddyfrontend-kn9e.onrender.com",
+     "https://workoutbuddy-9nqn.onrender.com"
+
 ]
 
 # Application definition
